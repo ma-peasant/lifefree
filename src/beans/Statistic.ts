@@ -1,21 +1,19 @@
 import { tableV2GridProps } from "element-plus/es/components/table-v2/src/grid";
 
 class Statistic {
-    public prices : number = 0;
+    public prices : string = '';
     //备注 
     public mark :  string  = '';  
     //消费标签
     public tag : string = '';
-    public lifeEnergy : number = 0;
+    public lifeEnergy : string = '';
     public date : string = '';
     //开支类型
     public moneyTag : string  = '';
-
     constructor(){
     };
 
     // constructor(prices: number, mark: string, tag: string ,lifeEnergy:number,date:string,moneyTag :string) {
-       
     //     this.prices = prices
     //     this.mark = mark
     //     this.tag = tag

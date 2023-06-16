@@ -5,4 +5,9 @@ class Tag {
         this.content = content
     }
 }
-export {Tag}
+
+class TagData extends Tag {
+    //备注 
+    public id :  number  = 0;  
+}
+export {Tag,TagData}

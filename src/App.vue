@@ -5,8 +5,11 @@
 </template>
 <!-- <Main ref="main" /> -->
 <script lang="ts" setup>
-import {CreateTable, select} from './utils/sqlite' 
+import {CreateTable} from './utils/sqlite'
+import {OpenXlsx} from './utils/xlsxUtil'
+
 CreateTable();
+OpenXlsx('test.xlsx');
 </script>
 
 <style>

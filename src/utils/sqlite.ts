@@ -2,6 +2,8 @@
 const Database = require('better-sqlite3');
 import { con } from './constant';
 import{Statistic} from '../beans/Statistic.js'
+import { Config } from '@/beans/Config';
+import { da } from 'element-plus/es/locale';
 //每次运行创建数据库和数据表
 const db = new Database(con.DBNAME);
 
@@ -29,33 +31,40 @@ export function CreateTable(){
         );`
         createTable(create_table_sql)
     }
+    if(!TableIsExit(con. Config_TABLE_NAME)){
+        const create_table_sql =
+        `CREATE TABLE ${con. Config_TABLE_NAME}
+        (
+            key  TEXT PRIMARY KEY,
+            value  TEXT
+        );`
+        createTable(create_table_sql)
+    }
+   
 }
 
-//InsertData("testfirst", 1)
 export function select(table_name :string) {
-    // 执行查询
     const query = db.prepare(`SELECT * FROM ${table_name}`);
     const result = query.all();
-    // 处理查询结果
     console.log(result);
-    // if (result.length > 0) {
-    //     console.log(typeof (result));
-    //     result.filter(item => {
-    //       Tags.push(item)
-    //     })
-    //   }
+ 
     return result;
     // 关闭数据库连接
     //db.close();
 }
 
-
-
-
 //创建表格
 function createTable(sql:string) {
     db.exec(sql) //执行sql命令
     console.log('创建表成功');
+}
+
+export function InsertConfigData(data:Config) {
+    const stmt = db.prepare(`INSERT INTO ${con.Config_TABLE_NAME}(key,value) VALUES (?,?)`);
+    const info = stmt.run(data.key,data.value);
+    const lastInsertedId = db.prepare('SELECT last_insert_rowid() as id').get().id;
+    console.log('插入的自增ID:', lastInsertedId);
+    return lastInsertedId;
 }
 
 export function InsertStatisticData(data:Statistic) {
@@ -78,6 +87,12 @@ export function UpdateTagData(tag:string , id:number) {
     const stmt = db.prepare(`UPDATE ${con.TAG_TABLE_NAME} SET tag = '{${tag}}' where id =  ${id}`);
     const info = stmt.run();
 }
+
+export function UpdateConfigData(key:string , value:string) {
+    const stmt = db.prepare(`UPDATE ${con.Config_TABLE_NAME} SET value = '{${value}}' where key =  ${key}`);
+    const info = stmt.run();
+}
+
 export function DeleteTagData(id :number) {
     const stmt = db.prepare(`delete from ${con.TAG_TABLE_NAME} where id = ${id}`);
     const info = stmt.run();
@@ -87,6 +102,13 @@ export function DeleteStatisticData(id :number) {
     const stmt = db.prepare(`delete from ${con.STATISTIC_TABLE_NAME} where id = ${id}`);
     const info = stmt.run();
 }
+
+export function ClearTable(table_name :string){
+    const deleteQuery = `DELETE FROM ${table_name}`;
+    db.exec(deleteQuery);
+}
+
+
 function TableIsExit(table_name:string) {
     // 准备查询语句
     const query = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?");

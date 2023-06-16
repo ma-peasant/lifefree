@@ -1,31 +1,41 @@
 <script lang="ts" setup >
 import { reactive, ref } from "vue";
-import { InsertStatisticData ,DeleteStatisticData} from "../utils/sqlite";
+import { InsertStatisticData, DeleteStatisticData} from "../utils/sqlite";
 import { ipcRenderer } from 'electron';
-import { Statistic,TabData } from '../beans/Statistic';
+import { Statistic, TabData } from '../beans/Statistic';
 import { MoenyTag } from '../beans/MoneyTag';
 import * as echarts from 'echarts';
-import { onMounted} from 'vue';
+import { onMounted } from 'vue';
 import { select } from '@/utils/sqlite';
 import { con } from '@/utils/constant';
-function InitDB() {
-  let result = select(con.TAG_TABLE_NAME)
+import { TagData } from '../beans/Tag';
+
+
+
+
+
+function InitDB(action: () => void) {
+
+  let result: Array<TabData> = select(con.TAG_TABLE_NAME)
   if (result.length > 0) {
-    result.filter(item => {
+    result.filter((item: TabData) => {
       consumeTypeBase.push(item)
     })
   }
-  let result2 = select(con.STATISTIC_TABLE_NAME)
+  let result2: Array<TagData> = select(con.STATISTIC_TABLE_NAME)
   if (result2.length > 0) {
-    result2.filter(item => {
+    result2.filter((item: TagData) => {
       tableData.push(item)
     })
   }
+  action();
 }
 
 onMounted(() => {
-  getEchartData();
-  InitDB();
+  //writeXlsx();
+  InitDB(()=>{
+    MathEchartData()
+  });
   // 监听自定义事件
   ipcRenderer.on('data-updated', () => {
     console.log("监听到数据操作");
@@ -33,31 +43,31 @@ onMounted(() => {
     consumeTypeBase.splice(0, consumeTypeBase.length);
     let result = select(con.TAG_TABLE_NAME)
     if (result.length > 0) {
-      result.filter(item => {
+      result.filter((item: TabData) => {
         consumeTypeBase.push(item)
       })
     }
   });
 })
 
-let tableData = reactive([]);
+let tableData = reactive([] as any);
 
-let consumeTypeBase = reactive([]);
-const tag = ref('')
-const moneyTag = ref('')
-const prices = ref('')
-const mark = ref('') // 备注
-const lifeEnergy = ref('')   //生命能量
-const moneyTpye = [MoenyTag.pay, MoenyTag.income]
-const consumeDate = ref("")
-const tableType = [
+let consumeTypeBase = reactive([] as any);
+let tag = ref('')
+let moneyTag = ref('')
+let prices = ref('')
+let mark = ref('') // 备注
+let lifeEnergy = ref('')   //生命能量
+let moneyTpye = [MoenyTag.pay, MoenyTag.income]
+let consumeDate = ref("")
+let tableType = [
   {
     name: '消费类型',
-    value: 'value'
+    value: 'tag'
   },
   {
     name: '消费时间',
-    value: 'consumeDate'
+    value: 'date'
   },
   {
     name: '消费金额',
@@ -65,7 +75,7 @@ const tableType = [
   },
   {
     name: '收入与开支',
-    value: 'value2'
+    value: 'moneyTag'
   },
   {
     name: '生命能量',
@@ -73,32 +83,64 @@ const tableType = [
   },
   {
     name: '备注',
-    value: 'tag'
+    value: 'mark'
   }
 ]
 
 function AddClick() {
   let data: Statistic = new Statistic();
-  data.tag = this.tag as string;
-  data.moneyTag = this.moneyTag;
-  data.date = this.consumeDate;
-  data.lifeEnergy = this.lifeEnergy;
-  data.prices = this.prices;
-  data.mark = this.tag;
-  console.log(this.tableData)
+  data.tag = tag.value;
+  data.moneyTag = moneyTag.value;
+  data.date = consumeDate.value;
+  data.lifeEnergy = lifeEnergy.value;
+  data.prices = prices.value;
+  data.mark = mark.value;
   let id = InsertStatisticData(data);
-
-  let row : TabData = JSON.parse(JSON.stringify(data));
+  let row: TabData = JSON.parse(JSON.stringify(data));
   row.id = id;
-  this.tableData.push(row);
+  tableData.push(row);
+
+  MathEchartData();
 }
 
 function editClick() {
   console.log("123");
 }
-function deleteRow(index:number,row:any) {
+function deleteRow(index: number, row: any) {
   DeleteStatisticData(row.id);
   tableData.splice(index, row.id)
+  MathEchartData();
+}
+
+let chartArry :any = [];
+let dateArray:any = [];
+let pricesArray:any = [];
+
+function MathEchartData() {
+  chartArry.splice(0,chartArry.length);
+  tableData.forEach((element:TabData) => {
+    if(chartArry.length <= 0){
+      //// 假设你想获取不带 $ 符号的纯金额值
+        chartArry.push({date: element.date ,prices:Number.parseFloat(element.prices.toString().replace(/\$/g,'').trim())})
+    }else{
+      const existingEntry = chartArry.find((entry :any) => entry.date === element.date)
+      if(existingEntry){
+        existingEntry.prices += Number.parseFloat(element.prices.toString().replace(/\$/g,'').trim());
+      }else{
+        chartArry.push({date: element.date ,prices:Number.parseFloat(element.prices.toString().replace(/\$/g,'').trim())})
+      }
+    }
+  });
+
+  dateArray.splice(0, dateArray.length); // 清空数组
+  pricesArray.splice(0,pricesArray.length);
+
+  chartArry.forEach((item:any) => {
+    dateArray.push(item.date);
+    pricesArray.push(item.prices);
+  });
+  console.log('dailyExpenses :' + chartArry)
+  getEchartData();
 }
 
 
@@ -111,14 +153,14 @@ function getEchartData() {
     const option = {
       xAxis: {
         type: 'category',
-        data: ['A', 'B', 'C']
+        data: dateArray
       },
       yAxis: {
         type: 'value'
       },
       series: [
         {
-          data: [120, 200, 150],
+          data: pricesArray,
           type: 'line'
         }
       ]
@@ -152,8 +194,8 @@ function openSetting() {
       <el-date-picker style="width: 240px;" v-model="consumeDate" type="date" placeholder="Pick a day" size="large"
         format="YYYY-MM-DD" value-format="YYYY-MM-DD" />
       <el-input style="width: 200px;" v-model="prices" placeholder="money"
-        :formatter="(value) => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
-        :parser="(value) => value.replace(/\$\s?|(,*)/g, '')" />
+        :formatter="(value: any) => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+        :parser="(value: any) => value.replace(/\$\s?|(,*)/g, '')" />
       <el-select v-model="moneyTag" class="m-2" placeholder="收入与开支" size="large">
         <el-option v-for="item in moneyTpye" :key="item" :label="item" :value="item" />
       </el-select>

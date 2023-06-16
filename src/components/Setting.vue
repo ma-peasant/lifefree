@@ -3,14 +3,15 @@ import { InsertTagData, DeleteTagData, select, UpdateTagData } from '@/utils/sql
 import { con } from '@/utils/constant';
 import { ref, reactive } from 'vue'
 import { ipcRenderer } from 'electron';
+import { TabData } from '@/beans/Statistic';
 let input_consumeType = ref('');
 let tableData = reactive([] as any);
 ShowData();
 function ShowData() {
-  let result = select(con.TAG_TABLE_NAME)
+  let result :Array<TabData> = select(con.TAG_TABLE_NAME)
   if (result.length > 0) {
     console.log(typeof (result));
-    result.filter(item => {
+    result.filter((item:TabData) => {
       tableData.push(item)
     })
   }

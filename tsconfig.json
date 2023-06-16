@@ -4,15 +4,12 @@
     "module": "esnext",
     "strict": true,
     "jsx": "preserve",
+    "importHelpers": true,
     "moduleResolution": "node",
-    "noImplicitThis": false, // 不允许this有隐式的any类型
     "experimentalDecorators": true,
-    "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "useDefineForClassFields": true,
     "sourceMap": true,
     "baseUrl": ".",
     "types": [
@@ -28,14 +25,16 @@
       "dom",
       "dom.iterable",
       "scripthost"
-    ]
+    ],
+    "outDir": "./dist_electron"
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
     "tests/**/*.ts",
-    "tests/**/*.tsx"
+    "tests/**/*.tsx",
+    "src/theme/element-ui-css.ts",
   ],
   "exclude": [
     "node_modules"
