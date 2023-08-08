@@ -1,5 +1,5 @@
 <script lang="ts" setup >
-import { InsertTagData, DeleteTagData, select, UpdateTagData } from '@/utils/sqlite';
+import { InsertTagData, DeleteTagData, select, UpdateTagData } from '@/sqlite/sqlite';
 import { con } from '@/utils/constant';
 import { ref, reactive } from 'vue'
 import { ipcRenderer } from 'electron';

@@ -5,7 +5,7 @@
 </template>
 <!-- <Main ref="main" /> -->
 <script lang="ts" setup>
-import {CreateTable} from './utils/sqlite'
+import {CreateTable} from './sqlite/sqlite'
 import {OpenXlsx} from './utils/xlsxUtil'
 
 CreateTable();

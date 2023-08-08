@@ -1,12 +1,11 @@
 <script lang="ts" setup >
 import { reactive, ref } from "vue";
-import { InsertStatisticData, DeleteStatisticData} from "../utils/sqlite";
+import { InsertStatisticData, DeleteStatisticData,select} from "../sqlite/sqlite";
 import { ipcRenderer } from 'electron';
 import { Statistic, TabData } from '../beans/Statistic';
 import { MoenyTag } from '../beans/MoneyTag';
 import * as echarts from 'echarts';
 import { onMounted } from 'vue';
-import { select } from '@/utils/sqlite';
 import { con } from '@/utils/constant';
 import { TagData } from '../beans/Tag';
 
