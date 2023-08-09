@@ -22,3 +22,7 @@ yarn lint
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
+
+### resources 文件夹说明
+bindings.js  ---为了替换 nodemodules下的 bindings模块里面的bindings.js
+
