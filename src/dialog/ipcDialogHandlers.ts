@@ -1,6 +1,6 @@
 
 const { ipcMain, dialog } = require('electron');
-
+//传递windows表示是模态窗口
 module.exports = (mainWindow:any) => {
   ipcMain.on('open-file-dialog', (event) => {
     const options : Electron.OpenDialogOptions = {
@@ -21,7 +21,7 @@ module.exports = (mainWindow:any) => {
     };
 
     dialog.showSaveDialog(mainWindow, options).then((result) => {
-      if(result.filePath != undefined ){
+      if(result.filePath != undefined  && result.filePath != '' && result.filePath.length > 0){
         event.reply('save-file', result.filePath);
       }
     });

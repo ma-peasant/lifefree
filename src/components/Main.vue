@@ -187,21 +187,24 @@ ipcRenderer.on('selected-file', (event, filePaths) => {
 
 ipcRenderer.on('save-file', (event, filePath) => {
   console.log('save File Paths:', filePath);
-  writeXlsx('八月' , filePath);
+  writeXlsx('八月', filePath);
 });
-
-
 
 </script>
 <template>
-  <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
-    <h1>Welcome to MoneyFree!</h1>
-    <el-icon style="height: 80px; margin-left: 40px;" :size=25 @click="openSetting()">
-      <Tools />
-    </el-icon>
-    <el-button class="button-wrapper" type="primary" @click="importExecl()">导入</el-button>
-    <el-button class="button-wrapper" type="primary" @click="outputExecl()">导出</el-button>
+  <div style="display: flex; flex-direction: row;">
+    <div style="display: flex; justify-content: center; align-items: center; flex: 1; margin-left: 150px;" >
+      <h1 style="width: 100%;">Welcome to MoneyFree!</h1>
+    </div>
+    <div style="display: flex; justify-content: flex-end; align-items: center; width: 150px;">
+      <el-icon style="height: 80px; margin-right: 20px;" :size="25" @click="openSetting()">
+        <Tools />
+      </el-icon>
+      <el-button  type="primary" @click="importExecl()">导入</el-button>
+      <el-button  type="primary" @click="outputExecl()">导出</el-button>
+    </div>
   </div>
+
   <div>
 
     <div style="display: flex; flex-direction: row;">
@@ -219,7 +222,6 @@ ipcRenderer.on('save-file', (event, filePath) => {
       <el-input style="width: 200px;" v-model="lifeEnergy" placeholder="生命能量" clearable />
       <el-input style="width: 400px;" v-model="mark" placeholder="备注" clearable />
     </div>
-    <!-- <input id="greet-input" v-model="name" placeholder="Enter a name..." /> -->
     <el-button type="button" @click="AddClick()" style="width: 100%">添加</el-button>
     <div>
       <el-table :data="tableData" style="width: 100%">
@@ -251,13 +253,5 @@ ipcRenderer.on('save-file', (event, filePath) => {
 .grid-content {
   border-radius: 4px;
   min-height: 36px;
-}
-
-.button-wrapper {
-  margin-top: 0;
-  /* Pushes the button to the top */
-  display: flex;
-  align-items: center;
-  justify-content: right;
 }
 </style>
