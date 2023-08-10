@@ -1,14 +1,21 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain, Menu } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain, Menu, dialog } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
+
+const createIpcHandler = require("./dialog/ipcDialogHandlers");
+
+
+
 const isDevelopment = process.env.NODE_ENV !== 'production'
 Menu.setApplicationMenu(null)
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
+
+
 let win : BrowserWindow;
 async function createWindow() {
   // Create the browser window.
@@ -34,6 +41,7 @@ async function createWindow() {
     // Load the index.html when not in development
     win.loadURL('app://./index.html')
   }
+  createIpcHandler(win);
   win.maximize()
   win.show()
 }

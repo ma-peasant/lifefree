@@ -1,6 +1,6 @@
 <script lang="ts" setup >
 import { reactive, ref } from "vue";
-import { InsertStatisticData, DeleteStatisticData,select} from "../sqlite/sqlite";
+import { InsertStatisticData, DeleteStatisticData, select } from "../sqlite/sqlite";
 import { ipcRenderer } from 'electron';
 import { Statistic, TabData } from '../beans/Statistic';
 import { MoenyTag } from '../beans/MoneyTag';
@@ -8,13 +8,10 @@ import * as echarts from 'echarts';
 import { onMounted } from 'vue';
 import { con } from '@/utils/constant';
 import { TagData } from '../beans/Tag';
+import { OpenXlsx, writeXlsx } from '../utils/xlsxUtil'
 
-
-
-
-
+//初始化页面数据， 从execl文件加载数据后，也可以调用该方法
 function InitDB(action: () => void) {
-
   let result: Array<TabData> = select(con.TAG_TABLE_NAME)
   if (result.length > 0) {
     result.filter((item: TabData) => {
@@ -32,13 +29,12 @@ function InitDB(action: () => void) {
 
 onMounted(() => {
   //writeXlsx();
-  InitDB(()=>{
+  InitDB(() => {
     MathEchartData()
   });
-  // 监听自定义事件
+  //消费类型 监听自定义事件
   ipcRenderer.on('data-updated', () => {
     console.log("监听到数据操作");
-    // 数据更新后的操作
     consumeTypeBase.splice(0, consumeTypeBase.length);
     let result = select(con.TAG_TABLE_NAME)
     if (result.length > 0) {
@@ -50,7 +46,6 @@ onMounted(() => {
 })
 
 let tableData = reactive([] as any);
-
 let consumeTypeBase = reactive([] as any);
 let tag = ref('')
 let moneyTag = ref('')
@@ -102,47 +97,42 @@ function AddClick() {
   MathEchartData();
 }
 
-function editClick() {
-  console.log("123");
-}
 function deleteRow(index: number, row: any) {
   DeleteStatisticData(row.id);
-  tableData.splice(index, row.id)
+  tableData.splice(index, 1)
   MathEchartData();
 }
 
-let chartArry :any = [];
-let dateArray:any = [];
-let pricesArray:any = [];
+let chartArry: any = [];
+let dateArray: any = [];
+let pricesArray: any = [];
 
 function MathEchartData() {
-  chartArry.splice(0,chartArry.length);
-  tableData.forEach((element:TabData) => {
-    if(chartArry.length <= 0){
+  chartArry.splice(0, chartArry.length);
+  tableData.forEach((element: TabData) => {
+    if (chartArry.length <= 0) {
       //// 假设你想获取不带 $ 符号的纯金额值
-        chartArry.push({date: element.date ,prices:Number.parseFloat(element.prices.toString().replace(/\$/g,'').trim())})
-    }else{
-      const existingEntry = chartArry.find((entry :any) => entry.date === element.date)
-      if(existingEntry){
-        existingEntry.prices += Number.parseFloat(element.prices.toString().replace(/\$/g,'').trim());
-      }else{
-        chartArry.push({date: element.date ,prices:Number.parseFloat(element.prices.toString().replace(/\$/g,'').trim())})
+      chartArry.push({ date: element.date, prices: Number.parseFloat(element.prices.toString().replace(/\$/g, '').trim()) })
+    } else {
+      const existingEntry = chartArry.find((entry: any) => entry.date === element.date)
+      if (existingEntry) {
+        existingEntry.prices += Number.parseFloat(element.prices.toString().replace(/\$/g, '').trim());
+      } else {
+        chartArry.push({ date: element.date, prices: Number.parseFloat(element.prices.toString().replace(/\$/g, '').trim()) })
       }
     }
   });
 
   dateArray.splice(0, dateArray.length); // 清空数组
-  pricesArray.splice(0,pricesArray.length);
+  pricesArray.splice(0, pricesArray.length);
 
-  chartArry.forEach((item:any) => {
+  chartArry.forEach((item: any) => {
     dateArray.push(item.date);
     pricesArray.push(item.prices);
   });
   console.log('dailyExpenses :' + chartArry)
   getEchartData();
 }
-
-
 
 function getEchartData() {
   const chart = document.getElementById("chart")
@@ -175,14 +165,42 @@ function openSetting() {
   ipcRenderer.send('open-setting')
 }
 
+//从execl导入数据 ， 会删除已存在的数据
+function importExecl() {
+  ipcRenderer.send('open-file-dialog');
+}
+
+//导出数据到execl
+function outputExecl() {
+  ipcRenderer.send('save-file-dialog');
+}
+
+ipcRenderer.on('selected-file', (event, filePaths) => {
+  console.log('Selected File Paths:', filePaths);
+  OpenXlsx(filePaths[0]);
+  //刷新页面
+  InitDB(() => {
+    MathEchartData()
+  });
+
+});
+
+ipcRenderer.on('save-file', (event, filePath) => {
+  console.log('save File Paths:', filePath);
+  writeXlsx('八月' , filePath);
+});
+
+
 
 </script>
 <template>
-  <div style="display: flex; flex-direction: row; justify-content: center;">
+  <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
     <h1>Welcome to MoneyFree!</h1>
     <el-icon style="height: 80px; margin-left: 40px;" :size=25 @click="openSetting()">
       <Tools />
     </el-icon>
+    <el-button class="button-wrapper" type="primary" @click="importExecl()">导入</el-button>
+    <el-button class="button-wrapper" type="primary" @click="outputExecl()">导出</el-button>
   </div>
   <div>
 
@@ -208,7 +226,6 @@ function openSetting() {
         <el-table-column v-for="item in tableType" :prop="item.value" :label="item.name" :width="110" />
         <el-table-column fixed="right" label="操作" width="130">
           <template #default="scope">
-            <!-- <el-button link type="primary" size="small" @click="editClick()">编辑</el-button> -->
             <el-button link type="primary" size="small" @click="deleteRow(scope.$index, scope.row)">删除</el-button>
           </template>
         </el-table-column>
@@ -234,5 +251,13 @@ function openSetting() {
 .grid-content {
   border-radius: 4px;
   min-height: 36px;
+}
+
+.button-wrapper {
+  margin-top: 0;
+  /* Pushes the button to the top */
+  display: flex;
+  align-items: center;
+  justify-content: right;
 }
 </style>

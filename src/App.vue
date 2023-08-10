@@ -6,10 +6,11 @@
 <!-- <Main ref="main" /> -->
 <script lang="ts" setup>
 import {CreateTable} from './sqlite/sqlite'
-import {OpenXlsx} from './utils/xlsxUtil'
+//import {OpenXlsx,writeXlsx} from './utils/xlsxUtil'
 
 CreateTable();
-OpenXlsx('test.xlsx');
+// OpenXlsx('test.xlsx');
+// writeXlsx('out.xlsx');
 </script>
 
 <style>
