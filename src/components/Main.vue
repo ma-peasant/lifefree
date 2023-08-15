@@ -5,55 +5,22 @@ import { ipcRenderer } from 'electron';
 import { Statistic, TabData } from '../beans/Statistic';
 import { MoenyTag } from '../beans/MoneyTag';
 import * as echarts from 'echarts';
-import { onMounted } from 'vue';
+import { onMounted ,nextTick,watch} from 'vue';
 import { con } from '@/utils/constant';
 import { TagData } from '../beans/Tag';
 import { OpenXlsx, writeXlsx } from '../utils/xlsxUtil'
+//**********************************字段定义***************************
+let tableData = reactive([] as any) ;    //消费信息  
+let consumeTypeBase = reactive([] as any);     //消费类型标签
+let tag = ref('')                      //表格对应的消费标签
+let moneyTag = ref('')                 //收入与支出
+let prices = ref('')                   //金额
+let mark = ref('')                     // 备注         
+let lifeEnergy = ref('')               //生命能量
+let consumeDate = ref("")              //消费时间
 
-//初始化页面数据， 从execl文件加载数据后，也可以调用该方法
-function InitDB(action: () => void) {
-  let result: Array<TabData> = select(con.TAG_TABLE_NAME)
-  if (result.length > 0) {
-    result.filter((item: TabData) => {
-      consumeTypeBase.push(item)
-    })
-  }
-  let result2: Array<TagData> = select(con.STATISTIC_TABLE_NAME)
-  if (result2.length > 0) {
-    result2.filter((item: TagData) => {
-      tableData.push(item)
-    })
-  }
-  action();
-}
-
-onMounted(() => {
-  //writeXlsx();
-  InitDB(() => {
-    MathEchartData()
-  });
-  //消费类型 监听自定义事件
-  ipcRenderer.on('data-updated', () => {
-    console.log("监听到数据操作");
-    consumeTypeBase.splice(0, consumeTypeBase.length);
-    let result = select(con.TAG_TABLE_NAME)
-    if (result.length > 0) {
-      result.filter((item: TabData) => {
-        consumeTypeBase.push(item)
-      })
-    }
-  });
-})
-
-let tableData = reactive([] as any);
-let consumeTypeBase = reactive([] as any);
-let tag = ref('')
-let moneyTag = ref('')
-let prices = ref('')
-let mark = ref('') // 备注
-let lifeEnergy = ref('')   //生命能量
-let moneyTpye = [MoenyTag.pay, MoenyTag.income]
-let consumeDate = ref("")
+let moneyTpye = [MoenyTag.pay, MoenyTag.income]   //开支还是收入
+//表格的格式
 let tableType = [
   {
     name: '消费类型',
@@ -81,6 +48,26 @@ let tableType = [
   }
 ]
 
+let chartArry: any = [];    //图表 ： 时间和消费在一起的集合
+//**********************************方法定义***************************
+//初始化页面数据， 从execl文件加载数据后，也可以调用该方法
+function InitDB() {
+  //消费类型
+  let result: Array<TabData> = select(con.TAG_TABLE_NAME)
+  if (result.length > 0) {
+    result.filter((item: TabData) => {
+      consumeTypeBase.push(item)
+    })
+  }
+  //消费信息
+  let result2: Array<TagData> = select(con.STATISTIC_TABLE_NAME)
+  if (result2.length > 0) {
+    result2.filter((item: TagData) => {
+      tableData.push(item)
+    })
+  }
+}
+
 function AddClick() {
   let data: Statistic = new Statistic();
   data.tag = tag.value;
@@ -93,20 +80,13 @@ function AddClick() {
   let row: TabData = JSON.parse(JSON.stringify(data));
   row.id = id;
   tableData.push(row);
-
-  MathEchartData();
 }
-
+//删除
 function deleteRow(index: number, row: any) {
   DeleteStatisticData(row.id);
   tableData.splice(index, 1)
-  MathEchartData();
 }
-
-let chartArry: any = [];
-let dateArray: any = [];
-let pricesArray: any = [];
-
+//表格数据处理
 function MathEchartData() {
   chartArry.splice(0, chartArry.length);
   tableData.forEach((element: TabData) => {
@@ -114,6 +94,7 @@ function MathEchartData() {
       //// 假设你想获取不带 $ 符号的纯金额值
       chartArry.push({ date: element.date, prices: Number.parseFloat(element.prices.toString().replace(/\$/g, '').trim()) })
     } else {
+      //同一日期的加在一起
       const existingEntry = chartArry.find((entry: any) => entry.date === element.date)
       if (existingEntry) {
         existingEntry.prices += Number.parseFloat(element.prices.toString().replace(/\$/g, '').trim());
@@ -122,19 +103,11 @@ function MathEchartData() {
       }
     }
   });
-
-  dateArray.splice(0, dateArray.length); // 清空数组
-  pricesArray.splice(0, pricesArray.length);
-
-  chartArry.forEach((item: any) => {
-    dateArray.push(item.date);
-    pricesArray.push(item.prices);
-  });
   console.log('dailyExpenses :' + chartArry)
-  getEchartData();
+  SetEchartData();
 }
 
-function getEchartData() {
+function SetEchartData() {
   const chart = document.getElementById("chart")
   if (chart) {
     console.log('加载数据列表');
@@ -142,14 +115,14 @@ function getEchartData() {
     const option = {
       xAxis: {
         type: 'category',
-        data: dateArray
+        data: chartArry.map((item:any) => item.date)
       },
       yAxis: {
         type: 'value'
       },
       series: [
         {
-          data: pricesArray,
+          data: chartArry.map((item:any) => item.prices),
           type: 'line'
         }
       ]
@@ -179,10 +152,7 @@ ipcRenderer.on('selected-file', (event, filePaths) => {
   console.log('Selected File Paths:', filePaths);
   OpenXlsx(filePaths[0]);
   //刷新页面
-  InitDB(() => {
-    MathEchartData()
-  });
-
+  InitDB();
 });
 
 ipcRenderer.on('save-file', (event, filePath) => {
@@ -190,6 +160,26 @@ ipcRenderer.on('save-file', (event, filePath) => {
   writeXlsx('八月', filePath);
 });
 
+ //消费类型 监听自定义事件
+ipcRenderer.on('data-updated', () => {
+    console.log("监听到数据操作");
+    consumeTypeBase.splice(0, consumeTypeBase.length);
+    let result = select(con.TAG_TABLE_NAME)
+    if (result.length > 0) {
+      result.filter((item: TabData) => {
+        consumeTypeBase.push(item)
+      })
+    }
+  });
+//**********************************vue生命周期***************************8***************** */
+onMounted(() => {
+  InitDB();
+})
+
+watch(tableData, () => {
+  console.log('tableData发生了变化');
+  MathEchartData();
+})
 </script>
 <template>
   <div style="display: flex; flex-direction: row;">
@@ -206,7 +196,6 @@ ipcRenderer.on('save-file', (event, filePath) => {
   </div>
 
   <div>
-
     <div style="display: flex; flex-direction: row;">
       <el-select v-model="tag" class="m-2" placeholder="消费类别" size="large">
         <el-option v-for="item in consumeTypeBase" :key="item.tag" :label="item.tag" :value="item.tag" />
