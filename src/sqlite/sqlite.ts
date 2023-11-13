@@ -6,41 +6,14 @@ import { Config } from '@/beans/Config';
 import { da } from 'element-plus/es/locale';
 //每次运行创建数据库和数据表
 const db = new Database(con.DBNAME);
+import {tables} from './tables'
 
 export function CreateTable(){
-    if(!TableIsExit(con.STATISTIC_TABLE_NAME)){
-        const create_table_sql =
-        `CREATE TABLE ${con.STATISTIC_TABLE_NAME}
-        (
-            id      INTEGER PRIMARY KEY AUTOINCREMENT,
-            tag  TEXT,
-            prices FLOAT,
-            mark     TEXT,
-            lifeEnergy FLOAT,
-            date      TEXT,
-            moneyTag   TEXT
-        );`
-        createTable(create_table_sql)
+    for(let entry of tables.entries()){
+        if(!TableIsExit(entry[0])){
+            createTable(entry[1])
+        }
     }
-    if(!TableIsExit(con.TAG_TABLE_NAME)){
-        const create_table_sql =
-        `CREATE TABLE ${con.TAG_TABLE_NAME}
-        (
-            id      INTEGER PRIMARY KEY AUTOINCREMENT,
-            tag  TEXT
-        );`
-        createTable(create_table_sql)
-    }
-    if(!TableIsExit(con. Config_TABLE_NAME)){
-        const create_table_sql =
-        `CREATE TABLE ${con. Config_TABLE_NAME}
-        (
-            key  TEXT PRIMARY KEY,
-            value  TEXT
-        );`
-        createTable(create_table_sql)
-    }
-   
 }
 
 export function select(table_name :string) {
@@ -60,7 +33,7 @@ function createTable(sql:string) {
 }
 
 export function InsertConfigData(data:Config) {
-    const stmt = db.prepare(`INSERT INTO ${con.Config_TABLE_NAME}(key,value) VALUES (?,?)`);
+    const stmt = db.prepare(`INSERT INTO ${con.Setting_TABLE_NAME}(key,value) VALUES (?,?)`);
     const info = stmt.run(data.key,data.value);
     const lastInsertedId = db.prepare('SELECT last_insert_rowid() as id').get().id;
     console.log('插入的自增ID:', lastInsertedId);
@@ -68,15 +41,15 @@ export function InsertConfigData(data:Config) {
 }
 
 export function InsertStatisticData(data:Statistic) {
-    const stmt = db.prepare(`INSERT INTO ${con.STATISTIC_TABLE_NAME}(tag,prices,mark,lifeEnergy,date,moneyTag) VALUES (?,?,?,?,?,?)`);
-    const info = stmt.run(data.tag, data.prices,data.mark,data.lifeEnergy,data.date,data.moneyTag);
+    const stmt = db.prepare(`INSERT INTO ${con.STATISTIC_TABLE_NAME}(category,prices,mark,lifeEnergy,date,moneyTag) VALUES (?,?,?,?,?,?)`);
+    const info = stmt.run(data.category, data.prices,data.mark,data.lifeEnergy,data.date,data.moneyTag);
     const lastInsertedId = db.prepare('SELECT last_insert_rowid() as id').get().id;
     console.log('插入的自增ID:', lastInsertedId);
     return lastInsertedId;
 }
 //添加消费类型
 export function InsertTagData(data :string) {
-    const stmt = db.prepare(`INSERT INTO ${con.TAG_TABLE_NAME}(tag) VALUES (?)`);
+    const stmt = db.prepare(`INSERT INTO ${con.Category_TABLE_NAME}(tag) VALUES (?)`);
     const info = stmt.run(data);
     const lastInsertedId = db.prepare('SELECT last_insert_rowid() as id').get().id;
     console.log('插入的自增ID:', lastInsertedId);
@@ -84,17 +57,17 @@ export function InsertTagData(data :string) {
 }
 
 export function UpdateTagData(tag:string , id:number) {
-    const stmt = db.prepare(`UPDATE ${con.TAG_TABLE_NAME} SET tag = '{${tag}}' where id =  ${id}`);
+    const stmt = db.prepare(`UPDATE ${con.Category_TABLE_NAME} SET tag = '{${tag}}' where id =  ${id}`);
     const info = stmt.run();
 }
 
 export function UpdateConfigData(key:string , value:string) {
-    const stmt = db.prepare(`UPDATE ${con.Config_TABLE_NAME} SET value = '{${value}}' where key =  ${key}`);
+    const stmt = db.prepare(`UPDATE ${con.Setting_TABLE_NAME} SET value = '{${value}}' where key =  ${key}`);
     const info = stmt.run();
 }
 
 export function DeleteTagData(id :number) {
-    const stmt = db.prepare(`delete from ${con.TAG_TABLE_NAME} where id = ${id}`);
+    const stmt = db.prepare(`delete from ${con.Category_TABLE_NAME} where id = ${id}`);
     const info = stmt.run();
 }
 

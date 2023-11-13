@@ -1,3 +1,4 @@
+//开支类型
 class  MoenyTag {
     public static pay:string  = "支出";
     public static income :string  = "收入"

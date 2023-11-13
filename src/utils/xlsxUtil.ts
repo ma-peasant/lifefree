@@ -19,7 +19,7 @@ function OpenXlsx(filepath: string) {
             //类别	日期	金钱	支出与收入	生命能量	备注说明
             if ((element.length > 0) && (!element[0].toString().includes('类别'))) {
                 let data = new Statistic();
-                data.tag = element[0];
+                data.category = element[0];
                 data.date = moment(new Date(1900, 0, element[1] - 1)).format('YYYY-MM-DD');
                 data.prices = element[2];
                 data.moneyTag = element[3];
@@ -31,7 +31,6 @@ function OpenXlsx(filepath: string) {
     }catch(error : any){
         console.log("导入数据报错:" + error.message);
     }
-   
 }
 
 //导出功能的实现
@@ -43,7 +42,7 @@ function writeXlsx(sheetName :string,  filepath :string) {
     let out_data :Array<string[]> = [];
     data.forEach(element => {
         let flattened_array = []
-        flattened_array.push(element.tag);
+        flattened_array.push(element.category);
         flattened_array.push(element.date);
         flattened_array.push(element.prices);
         flattened_array.push(element.moneyTag);
@@ -52,13 +51,6 @@ function writeXlsx(sheetName :string,  filepath :string) {
         out_data.push(flattened_array);
     });
     console.log("out_data : " + out_data);
-    // const data = [
-    //     [1, 2, 3],
-    //     [true, false, null, 'sheetjs'],
-    //     ['foo', 'bar', new Date('2014-02-19T14:30Z'), '0.3'],
-    //     ['baz', null, 'qux'],
-    // ];
-
     const sheet = { name: sheetName, data: out_data, options: { '!cols': [{ wch: 10 }, { wch: 10 }, { wch: 10 }] } };
     const buffer = xlsx.build([sheet]);
     //var buffer = xlsx.build([{ name: '六月', data: data }]); // Returns a buffer

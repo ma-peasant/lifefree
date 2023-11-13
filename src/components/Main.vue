@@ -7,8 +7,9 @@ import { MoenyTag } from '../beans/MoneyTag';
 import * as echarts from 'echarts';
 import { onMounted ,nextTick,watch} from 'vue';
 import { con } from '@/utils/constant';
-import { TagData } from '../beans/Tag';
+import { CategoryData } from '../beans/Category';
 import { OpenXlsx, writeXlsx } from '../utils/xlsxUtil'
+import { useRouter } from "vue-router";
 //**********************************字段定义***************************
 let tableData = reactive([] as any) ;    //消费信息  
 let consumeTypeBase = reactive([] as any);     //消费类型标签
@@ -18,6 +19,8 @@ let prices = ref('')                   //金额
 let mark = ref('')                     // 备注         
 let lifeEnergy = ref('')               //生命能量
 let consumeDate = ref("")              //消费时间
+
+const router = useRouter()     //路由对象
 
 let moneyTpye = [MoenyTag.pay, MoenyTag.income]   //开支还是收入
 //表格的格式
@@ -53,16 +56,16 @@ let chartArry: any = [];    //图表 ： 时间和消费在一起的集合
 //初始化页面数据， 从execl文件加载数据后，也可以调用该方法
 function InitDB() {
   //消费类型
-  let result: Array<TabData> = select(con.TAG_TABLE_NAME)
+  let result: Array<TabData> = select(con.Category_TABLE_NAME)
   if (result.length > 0) {
     result.filter((item: TabData) => {
       consumeTypeBase.push(item)
     })
   }
   //消费信息
-  let result2: Array<TagData> = select(con.STATISTIC_TABLE_NAME)
+  let result2: Array<CategoryData> = select(con.STATISTIC_TABLE_NAME)
   if (result2.length > 0) {
-    result2.filter((item: TagData) => {
+    result2.filter((item: CategoryData) => {
       tableData.push(item)
     })
   }
@@ -70,7 +73,7 @@ function InitDB() {
 
 function AddClick() {
   let data: Statistic = new Statistic();
-  data.tag = tag.value;
+  data.category = tag.value;
   data.moneyTag = moneyTag.value;
   data.date = consumeDate.value;
   data.lifeEnergy = lifeEnergy.value;
@@ -136,6 +139,8 @@ function SetEchartData() {
 
 function openSetting() {
   ipcRenderer.send('open-setting')
+  
+  //router.push({ name: 'Setting' })
 }
 
 //从execl导入数据 ， 会删除已存在的数据
@@ -164,7 +169,7 @@ ipcRenderer.on('save-file', (event, filePath) => {
 ipcRenderer.on('data-updated', () => {
     console.log("监听到数据操作");
     consumeTypeBase.splice(0, consumeTypeBase.length);
-    let result = select(con.TAG_TABLE_NAME)
+    let result = select(con.Category_TABLE_NAME)
     if (result.length > 0) {
       result.filter((item: TabData) => {
         consumeTypeBase.push(item)

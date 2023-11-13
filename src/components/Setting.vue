@@ -8,7 +8,7 @@ let input_consumeType = ref('');
 let tableData = reactive([] as any);
 ShowData();
 function ShowData() {
-  let result :Array<TabData> = select(con.TAG_TABLE_NAME)
+  let result :Array<TabData> = select(con.Category_TABLE_NAME)
   if (result.length > 0) {
     console.log(typeof (result));
     result.filter((item:TabData) => {

@@ -100,6 +100,8 @@ if (isDevelopment) {
 }
 var winsetting: any
 function openSettingWindow(){
+
+
   if(winsetting !=null){
     winsetting.show();
     return;
